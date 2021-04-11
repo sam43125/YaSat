@@ -7,7 +7,7 @@
 FLAGS=-Wall -Wold-style-cast -Wformat=2 -ansi -pedantic -O3
 
 # List all the .o files you need to build here
-OBJS=parser.o sat.o
+OBJS=parser.o sat.o solver.o
 
 # This is the name of the executable file that gets built.  Please
 # don't change it.
@@ -19,8 +19,9 @@ all: $(OBJS)
 parser.o: parser.cpp parser.h
 	g++ $(FLAGS) -c parser.cpp
 sat.o: sat.cpp parser.h
-	g++ $(FLAGS) -c sat.cpp
-
+	g++ $(FLAGS) -std=c++11 -c sat.cpp
+solver.o: solver.cpp solver.hpp
+	g++ $(FLAGS) -std=c++11 -c solver.cpp
 # Add more compilation targets here
 
 

@@ -6,7 +6,6 @@
 #include <list>
 #include <queue>
 
-typedef std::vector<int>::iterator vIter;
 typedef std::vector<int> clause_t;
 
 enum {
@@ -15,6 +14,10 @@ enum {
 
 enum {
     UNASSIGNED, TRUE, FALSE
+};
+
+enum {
+    UNSAT, SAT, UNSOLVED
 };
 
 class Solver {
@@ -40,6 +43,8 @@ public:
 
     void assign(int var, int level=0);
 
+    void unassign(int level);
+
     /**
      * @return true if @c x in @c clause is been watching
      */
@@ -57,9 +62,29 @@ public:
     int BCP(int x, int level);
 
     /**
-     * @retval true if SAT
-     * @retval false if UNSAT 
+     * @brief Branching Heuristics
+     * @note Currently implemented in a naive way
+     * @todo Implement better branching heuristics
+     * @return The variable @c x which will be assigned to 1 
+     *         (if it's bigger than 0) or 0 instead  
      */
-    bool solve(int level=0);
+    int getNextDicisionVariable() const;
 
+    /**
+     * @retval SAT if all the clauses are solved
+     * @retval UNSAT if one of the clauses is UNSAT
+     * @retval UNSOLVED else
+     */
+    int isSolved() const;
+
+    /**
+     * @retval SAT if SAT
+     * @retval UNSAT if UNSAT 
+     */
+    bool DPLL(int level=0);
+
+    /**
+     * @brief Convert the final assignments to DIMACS format
+     */
+    std::vector<int> getAssignments() const;
 };

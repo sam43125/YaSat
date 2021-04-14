@@ -3,6 +3,7 @@
 #include <iostream>
 #include <algorithm>
 #include <iterator>
+#include <cmath>
 
 Solver::Solver(std::vector<clause_t> &clauses, int maxVarIndex) {
 
@@ -12,6 +13,7 @@ Solver::Solver(std::vector<clause_t> &clauses, int maxVarIndex) {
     this->assignments.resize(maxVarIndex + 1, UNASSIGNED);
     this->pos_watched.resize(maxVarIndex + 1);
     this->neg_watched.resize(maxVarIndex + 1);
+    this->score_table.reserve(2 * maxVarIndex);
 
     // Construct Watching Lists
     for (auto &clause : this->clauses) {
@@ -35,6 +37,18 @@ Solver::Solver(std::vector<clause_t> &clauses, int maxVarIndex) {
             this->neg_watched[-var2].push_back(&clause);
         this->watched_variable[&clause] = {var1, var2};
     }
+
+    // Construct Jeroslaw-Wang Score table
+    for (int i = 0; i < maxVarIndex; ++i) {
+        this->score_table[i] = 0.0;
+        this->score_table[-i] = 0.0;
+    }
+    for (const auto clause : this->clauses) {
+        double score = std::pow(2, static_cast<int>(-clause.size()));
+        for (auto var : clause)
+            this->score_table[var] += score;
+    }
+
 }
 
 void Solver::assign(int var, int level/*=0*/) {
@@ -129,11 +143,23 @@ int Solver::BCP(int x, int level) {
 }
 
 int Solver::getNextDicisionVariable() const {
-    // Naive way
-    for (size_t i = 1; i < this->assignments.size(); ++i)
-        if (this->assignments[i] == UNASSIGNED)
-            return i;
-    return 0;
+    // Jeroslaw-Wang Score
+    int next_var = 0;
+    double max_score = 0.0;
+    for (size_t i = 1; i < this->assignments.size(); ++i) {
+        if (this->assignments[i] == UNASSIGNED) {
+            double score;
+            if ((score = this->score_table.at(i)) > max_score) {
+                max_score = score;
+                next_var = i;
+            }
+            if ((score = this->score_table.at(-i)) > max_score) {
+                max_score = score;
+                next_var = -i;
+            }
+        }
+    }
+    return next_var;
 }
 
 int Solver::isSolved() const {

@@ -36,6 +36,8 @@ private:
     std::unordered_map<clause_t *, std::pair<int, int> > watched_variable;
     /// Store x (or -x) if x is to be implied as 1 (or 0)
     std::queue<int> imply_queue;
+    /// Branching Heuristics - Jeroslaw-Wang Score table
+    std::unordered_map<size_t, double> score_table;
 
 public:
 
@@ -62,9 +64,7 @@ public:
     int BCP(int x, int level);
 
     /**
-     * @brief Branching Heuristics
-     * @note Currently implemented in a naive way
-     * @todo Implement better branching heuristics
+     * @brief Branching Heuristics - Jeroslaw-Wang Score
      * @return The variable @c x which will be assigned to 1 
      *         (if it's bigger than 0) or 0 instead  
      */
@@ -78,6 +78,7 @@ public:
     int isSolved() const;
 
     /**
+     * @brief Implementation of Davis-Putnam-Logemann-Loveland algorithm
      * @retval SAT if SAT
      * @retval UNSAT if UNSAT 
      */

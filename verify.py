@@ -37,7 +37,8 @@ if __name__ == "__main__":
             assignments = sat.readlines()
             if "UNSAT" in assignments[0]:
                 print("UNSAT")
-                exit()
+                continue
+                # exit()
             assignments = set(map(int, assignments[1][2:].strip().split(" ")))
             assignments.remove(0)
 

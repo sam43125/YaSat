@@ -39,7 +39,7 @@ Solver::Solver(std::vector<clause_t> &clauses, int maxVarIndex) {
     }
 
     // Construct Jeroslaw-Wang Score table
-    for (int i = 0; i < maxVarIndex; ++i) {
+    for (int i = 1; i <= maxVarIndex; ++i) {
         this->score_table[i] = 0.0;
         this->score_table[-i] = 0.0;
     }

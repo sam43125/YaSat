@@ -5,6 +5,7 @@
 #include <vector>
 #include <list>
 #include <queue>
+#include <utility>
 
 typedef std::vector<int> clause_t;
 
@@ -28,7 +29,8 @@ private:
     std::vector<clause_t> clauses;
     /// Final answer
     std::vector<int> assignments;
-    std::map<int, std::vector<int> > assigned_levels;
+    std::map<int, std::vector<std::pair<int, clause_t *> > > assigned_levels;
+    std::vector<int> assigned_levels_reverse;
     /// 2-Literal Watching
     std::vector<std::list<clause_t *> > pos_watched;
     std::vector<std::list<clause_t *> > neg_watched;
@@ -37,13 +39,15 @@ private:
     /// Store x (or -x) if x is to be implied as 1 (or 0)
     std::queue<int> imply_queue;
     /// Branching Heuristics - Jeroslaw-Wang Score table
-    std::unordered_map<size_t, double> score_table;
+    std::unordered_map<int, double> score_table;
+    /// Denote which level to jump to rerun BCP if conflicting
+    int jump_to;
 
 public:
 
     Solver(std::vector<clause_t> &clauses, int maxVarIndex);
 
-    void assign(int var, int level=0);
+    void assign(int var, const clause_t *clause, int level=0);
 
     void unassign(int level);
 
@@ -78,7 +82,8 @@ public:
     int isSolved() const;
 
     /**
-     * @brief Implementation of Davis-Putnam-Logemann-Loveland algorithm
+     * @brief Implementation of modified Davis-Putnam-Logemann-Loveland algorithm
+     *        with non-chronological backtracking
      * @retval SAT if SAT
      * @retval UNSAT if UNSAT 
      */
@@ -88,4 +93,18 @@ public:
      * @brief Convert the final assignments to DIMACS format
      */
     std::vector<int> getAssignments() const;
+
+    /**
+     * @brief Resolve clauses @c F and @c G on @c x
+     * @return The resolvent
+     */
+    clause_t resolve(const clause_t *F, const clause_t *G, int x) const;
+
+    /**
+     * @brief Implementation of 1UIP algorithm
+     * @return The conflicting clause associated with the 1UIP cut
+     */
+    clause_t FirstUIP(const clause_t *conflicting_clause, int level) const;
+
+    void constructWatchingLists(clause_t &clause);
 };

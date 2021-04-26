@@ -19,9 +19,9 @@ all: $(OBJS)
 parser.o: parser.cpp parser.h
 	g++ $(FLAGS) -c parser.cpp
 sat.o: sat.cpp parser.h
-	g++ $(FLAGS) -std=c++11 -c sat.cpp
+	g++ $(FLAGS) -std=c++17 -c sat.cpp
 solver.o: solver.cpp solver.hpp
-	g++ $(FLAGS) -std=c++11 -c solver.cpp
+	g++ $(FLAGS) -std=c++17 -c solver.cpp
 # Add more compilation targets here
 
 

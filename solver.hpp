@@ -6,6 +6,7 @@
 #include <list>
 #include <queue>
 #include <utility>
+#include <optional>
 
 typedef std::vector<int> clause_t;
 
@@ -41,7 +42,7 @@ private:
     /// Branching Heuristics - Jeroslaw-Wang Score table
     std::unordered_map<int, double> score_table;
     /// Denote which level to jump to rerun BCP if conflicting
-    int jump_to;
+    std::optional<int> jump_to;
 
 public:
 

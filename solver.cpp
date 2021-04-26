@@ -8,6 +8,8 @@
 #include <unordered_map>
 #include <assert.h>
 
+#define MIN_LEN_OF_LEARNED_CLAUSE 10
+
 Solver::Solver(std::vector<clause_t> &clauses, int maxVarIndex) {
 
     this->clauses = clauses;
@@ -137,13 +139,16 @@ int Solver::BCP(int x, int level) {
 
                 // Run 1UIP to get newly learned clause and decide jump level
                 clause_t learned_clause = this->FirstUIP(clause, level);
+                if (learned_clause.size() > MIN_LEN_OF_LEARNED_CLAUSE)
+                    return ECONFLICT;
+
                 this->jump_to = INT32_MIN;
                 for (auto var : learned_clause) {
                     int l = this->assigned_levels_reverse[std::abs(var)];
                     if (l != level)
-                        this->jump_to = std::max(this->jump_to, l);
+                        this->jump_to = std::max(this->jump_to.value(), l);
                 }
-                this->jump_to = std::max(this->jump_to, 0);
+                this->jump_to = std::max(this->jump_to.value(), 0);
 
                 // Add it to database
                 assert("Learned clause should not be empty" && !learned_clause.empty());
@@ -170,7 +175,7 @@ int Solver::BCP(int x, int level) {
                 std::clog << "Learned clause: ";
                 std::copy(learned_clause.begin(), learned_clause.end(), 
                           std::ostream_iterator<int>(std::clog, " "));
-                std::clog << "\nJump to level " << this->jump_to << "\n";
+                std::clog << "\nJump to level " << this->jump_to.value() << "\n";
 #endif
                 return ECONFLICT;
             }
@@ -256,14 +261,30 @@ bool Solver::DPLL(int level/*=0*/) {
             return SAT;
 
         this->unassign(level + 1);
-        if (this->jump_to != level)
-            return UNSAT;
-        else {
-            // Do BCP again on newly added unit clause
-            this->jump_to = -1;
-            continue;
+
+        // First time conflict happened but learned no clause
+        if (!this->jump_to.has_value()) {
+            this->imply_queue = {};
+            this->assign(-next_var, nullptr, level + 1);
+            if (DPLL(level + 1) == SAT)
+                return SAT;
+            this->unassign(level + 1);
         }
 
+        if (this->jump_to.has_value()) {
+            if (this->jump_to.value() != level)
+                return UNSAT;
+            else {
+                // Do BCP again on newly added unit clause
+                this->jump_to = std::nullopt;
+                continue;
+            }
+        }
+        // Second time conflict happened but learned no clause
+        else {
+            this->imply_queue = {};
+            return UNSAT;
+        }
     }
 }
 

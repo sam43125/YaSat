@@ -28,7 +28,7 @@ private:
 
     int maxVarIndex;
     size_t clauses_capacity;
-    std::vector<const clause_t> clauses;
+    std::vector<clause_t> clauses;
     /// Final answer
     std::vector<int> assignments;
     std::map<int, std::vector<std::pair<int, const clause_t *> > > assigned_levels;
@@ -47,7 +47,7 @@ private:
 
 public:
 
-    Solver(const std::vector<const clause_t> &clauses, int maxVarIndex);
+    Solver(std::vector<clause_t> &clauses, int maxVarIndex);
 
     void assign(int var, const clause_t *clause, int level=0);
 

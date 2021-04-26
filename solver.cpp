@@ -11,7 +11,7 @@
 #define MIN_LEN_OF_LEARNED_CLAUSE 10
 #define CLAUSES_CAPACITY_MULTIPLIER 100
 
-Solver::Solver(const std::vector<const clause_t> &clauses, int maxVarIndex) {
+Solver::Solver(std::vector<clause_t> &clauses, int maxVarIndex) {
 
     this->clauses = clauses;
     this->maxVarIndex = maxVarIndex;

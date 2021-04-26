@@ -27,16 +27,17 @@ class Solver {
 private:
 
     int maxVarIndex;
-    std::vector<clause_t> clauses;
+    size_t clauses_capacity;
+    std::vector<const clause_t> clauses;
     /// Final answer
     std::vector<int> assignments;
-    std::map<int, std::vector<std::pair<int, clause_t *> > > assigned_levels;
+    std::map<int, std::vector<std::pair<int, const clause_t *> > > assigned_levels;
     std::vector<int> assigned_levels_reverse;
     /// 2-Literal Watching
-    std::vector<std::list<clause_t *> > pos_watched;
-    std::vector<std::list<clause_t *> > neg_watched;
+    std::vector<std::list<const clause_t *> > pos_watched;
+    std::vector<std::list<const clause_t *> > neg_watched;
     /// Store the 2 watched literals on clauses
-    std::unordered_map<clause_t *, std::pair<int, int> > watched_variable;
+    std::unordered_map<const clause_t *, std::pair<int, int> > watched_variable;
     /// Store x (or -x) if x is to be implied as 1 (or 0)
     std::queue<int> imply_queue;
     /// Branching Heuristics - Jeroslaw-Wang Score table
@@ -46,7 +47,7 @@ private:
 
 public:
 
-    Solver(std::vector<clause_t> &clauses, int maxVarIndex);
+    Solver(const std::vector<const clause_t> &clauses, int maxVarIndex);
 
     void assign(int var, const clause_t *clause, int level=0);
 
@@ -55,9 +56,9 @@ public:
     /**
      * @return true if @c x in @c clause is been watching
      */
-    bool isWatched(clause_t *clause, int x);
+    bool isWatched(const clause_t *clause, int x) const;
 
-    void replaceWatchingVariable(clause_t *clause, int from, int to);
+    void replaceWatchingVariable(const clause_t *clause, int from, int to);
 
     /**
      * @param[in] x The decision (or implied) variable on previous step,
@@ -107,5 +108,5 @@ public:
      */
     clause_t FirstUIP(const clause_t *conflicting_clause, int level) const;
 
-    void constructWatchingLists(clause_t &clause);
+    void constructWatchingLists(const clause_t &clause);
 };

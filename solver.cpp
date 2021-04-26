@@ -6,18 +6,19 @@
 #include <cmath>
 #include <unordered_set>
 #include <unordered_map>
-#include <assert.h>
+#include <cassert>
 
 #define MIN_LEN_OF_LEARNED_CLAUSE 10
+#define CLAUSES_CAPACITY_MULTIPLIER 100
 
-Solver::Solver(std::vector<clause_t> &clauses, int maxVarIndex) {
+Solver::Solver(const std::vector<const clause_t> &clauses, int maxVarIndex) {
 
     this->clauses = clauses;
     this->maxVarIndex = maxVarIndex;
 
     // To prevent reallocation of vector which makes pointer to clause invaild
-    // TODO: Limit the maximum newly learned clauses
-    this->clauses.reserve(100 * this->clauses.size());
+    this->clauses_capacity = CLAUSES_CAPACITY_MULTIPLIER * this->clauses.size();
+    this->clauses.reserve(this->clauses_capacity);
     this->assigned_levels_reverse.resize(maxVarIndex + 1, -1);
     this->assignments.resize(maxVarIndex + 1, UNASSIGNED);
     this->pos_watched.resize(maxVarIndex + 1);
@@ -48,9 +49,10 @@ void Solver::assign(int var, const clause_t *clause, int level/*=0*/) {
     std::clog << (this->assigned_levels[level].empty() ? "Decide " : "Imply ") 
               << var << " on level " << level << "\n";
 #endif
+
     this->assignments[std::abs(var)] = (var > 0) ? TRUE : FALSE;
     this->assigned_levels_reverse[std::abs(var)] = level;
-    this->assigned_levels[level].emplace_back(var, const_cast<clause_t *>(clause));
+    this->assigned_levels[level].emplace_back(var, clause);
     this->imply_queue.push(var);
 }
 
@@ -79,12 +81,12 @@ void Solver::unassign(int level) {
     this->assigned_levels[level].clear();
 }
 
-bool Solver::isWatched(clause_t *clause, int x) {
-    auto watching_vars = this->watched_variable[clause];
+bool Solver::isWatched(const clause_t *clause, int x) const {
+    const auto watching_vars = this->watched_variable.at(clause);
     return x == watching_vars.first || x == watching_vars.second;
 }
 
-void Solver::replaceWatchingVariable(clause_t *clause, int from, int to) {
+void Solver::replaceWatchingVariable(const clause_t *clause, int from, int to) {
     auto &watching_vars = this->watched_variable[clause];
     if (from == watching_vars.first)
         watching_vars.first = to;
@@ -94,12 +96,12 @@ void Solver::replaceWatchingVariable(clause_t *clause, int from, int to) {
 
 int Solver::BCP(int x, int level) {
 
-    std::list<clause_t *> &watching = (x < 0) ? this->pos_watched[-x] : this->neg_watched[x];
-    std::list<clause_t *>::iterator it = watching.begin();
+    std::list<const clause_t *> &watching = (x < 0) ? this->pos_watched[-x] : this->neg_watched[x];
+    std::list<const clause_t *>::iterator it = watching.begin();
 
     while (it != watching.end()) {
 
-        clause_t *clause = *it;
+        const clause_t *clause = *it;
         bool case1 = false;
 
         for (auto y : *clause) {
@@ -111,9 +113,9 @@ int Solver::BCP(int x, int level) {
                   (this->assignments[std::abs(y)] == TRUE  && y > 0)) || 
                   (this->assignments[std::abs(y)] == UNASSIGNED)) && (!this->isWatched(clause, y))) {
                 it = watching.erase(it);
-                std::list<clause_t *> &y_watching = (y > 0) ? 
-                                                    this->pos_watched[y] : 
-                                                    this->neg_watched[-y];
+                std::list<const clause_t *> &y_watching = (y > 0) ? 
+                                                          this->pos_watched[y] : 
+                                                          this->neg_watched[-y];
                 y_watching.push_back(clause);
                 this->replaceWatchingVariable(clause, -x, y);
                 case1 = true;
@@ -139,7 +141,8 @@ int Solver::BCP(int x, int level) {
 
                 // Run 1UIP to get newly learned clause and decide jump level
                 clause_t learned_clause = this->FirstUIP(clause, level);
-                if (learned_clause.size() > MIN_LEN_OF_LEARNED_CLAUSE)
+                if (learned_clause.size() > MIN_LEN_OF_LEARNED_CLAUSE || 
+                    this->clauses.size() >= this->clauses_capacity)
                     return ECONFLICT;
 
                 this->jump_to = INT32_MIN;
@@ -320,7 +323,7 @@ clause_t Solver::FirstUIP(const clause_t *conflicting_clause, int level) const {
     while (true) {
 
         int nAssignedAtCurrentLevel = 0;
-        clause_t *antecedent = nullptr;
+        const clause_t *antecedent = nullptr;
         int p = 0;
 
         for (auto var : C) {
@@ -348,7 +351,7 @@ clause_t Solver::FirstUIP(const clause_t *conflicting_clause, int level) const {
     return C;
 }
 
-void Solver::constructWatchingLists(clause_t &clause) {
+void Solver::constructWatchingLists(const clause_t &clause) {
 
     int var1 = clause[0];
     if (var1 > 0)

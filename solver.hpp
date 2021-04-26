@@ -10,19 +10,19 @@
 
 typedef std::vector<int> clause_t;
 
-enum {
-    ECONFLICT, SUCCESS
-};
-
-enum {
-    UNASSIGNED, TRUE, FALSE
-};
-
-enum {
-    UNSAT, SAT, UNSOLVED
-};
-
 class Solver {
+
+    enum {
+        ECONFLICT, SUCCESS
+    };
+
+    enum {
+        UNASSIGNED, TRUE, FALSE
+    };
+
+    enum {
+        UNSAT, SAT, UNSOLVED
+    };
 
 private:
 
@@ -31,7 +31,10 @@ private:
     std::vector<clause_t> clauses;
     /// Final answer
     std::vector<int> assignments;
+    /// Key is level and value is a vector storing pairs of a variable 
+    /// and a pointer to clause which makes it unit
     std::map<int, std::vector<std::pair<int, const clause_t *> > > assigned_levels;
+    /// The value of i-th element is the decision (or implied) level of variable i
     std::vector<int> assigned_levels_reverse;
     /// 2-Literal Watching
     std::vector<std::list<const clause_t *> > pos_watched;
@@ -100,7 +103,7 @@ public:
      * @brief Resolve clauses @c F and @c G on @c x
      * @return The resolvent
      */
-    clause_t resolve(const clause_t *F, const clause_t *G, int x) const;
+    static clause_t resolve(const clause_t *F, const clause_t *G, int x);
 
     /**
      * @brief Implementation of 1UIP algorithm

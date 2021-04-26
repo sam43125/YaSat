@@ -299,7 +299,7 @@ std::vector<int> Solver::getAssignments() const {
     return assignments;
 }
 
-clause_t Solver::resolve(const clause_t *F, const clause_t *G, int x) const {
+clause_t Solver::resolve(const clause_t *F, const clause_t *G, int x) {
 
     clause_t clause;
     std::unordered_set<int> resolvent;

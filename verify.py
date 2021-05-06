@@ -13,6 +13,9 @@ if __name__ == "__main__":
 
     start_time = time.time()
 
+    nSAT = 0
+    nUNSAT = 0 
+
     for filename in filenames:
 
         fullpath = os.path.join(sys.argv[1], filename)
@@ -37,6 +40,7 @@ if __name__ == "__main__":
             assignments = sat.readlines()
             if "UNSAT" in assignments[0]:
                 print("UNSAT")
+                nUNSAT += 1
                 continue
                 # exit()
             assignments = set(map(int, assignments[1][2:].strip().split(" ")))
@@ -51,5 +55,7 @@ if __name__ == "__main__":
                     exit()
 
             print("Correct answer")
+            nSAT += 1
 
     print("--- %s seconds ---" % (time.time() - start_time))
+    print(f"SAT: {nSAT}\nUNSAT: {nUNSAT}")

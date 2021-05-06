@@ -66,14 +66,16 @@ void Solver::unassign(int level) {
 #endif
 
     std::unordered_set<int> assigned_vars_in_level_0;
-    for (auto assigned : this->assigned_levels[0])
+    for (auto assigned : this->assigned_levels[0]) {
         assigned_vars_in_level_0.insert(assigned.first);
+        assigned_vars_in_level_0.insert(-assigned.first);
+    }
 
     for (auto assigned : this->assigned_levels[level]) {
         // Special case: When newly learned clause is an unit clause,
         // the only one variable of it is assigned at level 0, 
         // so the variable cannnot be unassigned  
-        if (!assigned_vars_in_level_0.count(std::abs(assigned.first))) {
+        if (!assigned_vars_in_level_0.count(assigned.first)) {
             this->assignments[std::abs(assigned.first)] = UNASSIGNED;
             this->assigned_levels_reverse[std::abs(assigned.first)] = -1;
         }
@@ -137,7 +139,7 @@ int Solver::BCP(int x, int level) {
             }
             // Case 4
             else if ((assignment == FALSE && other_watched_var > 0) ||
-                        (assignment == TRUE  && other_watched_var < 0)) {
+                     (assignment == TRUE  && other_watched_var < 0)) {
 
                 // Run 1UIP to get newly learned clause and decide jump level
                 clause_t learned_clause = this->FirstUIP(clause, level);
@@ -249,12 +251,6 @@ bool Solver::DPLL(int level/*=0*/) {
                 return UNSAT;
         }
 
-        int status = this->isSolved();
-        if (status == SAT)
-            return SAT;
-        else if (status == UNSAT)
-            return UNSAT;
-        
         int next_var = this->getNextDicisionVariable();
         if (next_var == 0)
             return SAT;

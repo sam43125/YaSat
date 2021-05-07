@@ -322,21 +322,26 @@ clause_t Solver::FirstUIP(const clause_t *conflicting_clause, int level) const {
         const clause_t *antecedent = nullptr;
         int p = 0;
 
-        for (auto var : C) {
-            if (this->assigned_levels_reverse[std::abs(var)] == level) {
-                nAssignedAtCurrentLevel++;
-                if (std::abs(var) != std::abs(current_decision_var))
-                    p = var;
-            }
-        }
+        nAssignedAtCurrentLevel = std::count_if(C.begin(), C.end(), 
+                                                [this, level](int var) {
+                                                    return this->assigned_levels_reverse[std::abs(var)] == level;
+                                                });
+
         if (nAssignedAtCurrentLevel <= 1)
             break;
 
-        for (auto assigned : this->assigned_levels.at(level)) {
-            if (assigned.first == p || assigned.first == -p) {
-                antecedent = assigned.second;
-                break;
-            }
+        // Select most recently assigned variable in current decision level
+        auto reverse_it = std::find_first_of(this->assigned_levels.at(level).rbegin(),
+                                             this->assigned_levels.at(level).rend(),
+                                             C.begin(), C.end(), 
+                                             [=](std::pair<int, const clause_t *> a, int b) {
+                                                 return std::abs(a.first) == std::abs(b) && 
+                                                        std::abs(b) != std::abs(current_decision_var);
+                                             });
+
+        if (reverse_it != this->assigned_levels.at(level).rend()) {
+            p = reverse_it->first;
+            antecedent = reverse_it->second;
         }
 
         assert("antecedent cannot be nullptr" && antecedent != nullptr);

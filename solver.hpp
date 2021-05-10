@@ -31,9 +31,9 @@ private:
     std::vector<clause_t> clauses;
     /// Final answer
     std::vector<int> assignments;
-    /// Key is level and value is a vector storing pairs of a variable 
+    /// The index is level and value is a vector storing pairs of a variable 
     /// and a pointer to clause which makes it unit
-    std::map<int, std::vector<std::pair<int, const clause_t *> > > assigned_levels;
+    std::vector<std::vector<std::pair<int, const clause_t *> > > assigned_levels;
     /// The value of i-th element is the decision (or implied) level of variable i
     std::vector<int> assigned_levels_reverse;
     /// 2-Literal Watching

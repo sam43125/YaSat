@@ -8,7 +8,7 @@
 #include <unordered_map>
 #include <cassert>
 
-#define MIN_LEN_OF_LEARNED_CLAUSE 10
+#define MIN_LEN_OF_LEARNED_CLAUSE 8
 #define CLAUSES_CAPACITY_MULTIPLIER 100
 
 Solver::Solver(std::vector<clause_t> &clauses, int maxVarIndex) {
@@ -20,6 +20,7 @@ Solver::Solver(std::vector<clause_t> &clauses, int maxVarIndex) {
     this->clauses_capacity = CLAUSES_CAPACITY_MULTIPLIER * this->clauses.size();
     this->clauses.reserve(this->clauses_capacity);
     this->assigned_levels_reverse.resize(maxVarIndex + 1, -1);
+    this->assigned_levels.resize(maxVarIndex + 1);
     this->assignments.resize(maxVarIndex + 1, UNASSIGNED);
     this->pos_watched.resize(maxVarIndex + 1);
     this->neg_watched.resize(maxVarIndex + 1);
@@ -84,7 +85,7 @@ void Solver::unassign(int level) {
 }
 
 bool Solver::isWatched(const clause_t *clause, int x) const {
-    const auto watching_vars = this->watched_variable.at(clause);
+    const auto &watching_vars = this->watched_variable.at(clause);
     return x == watching_vars.first || x == watching_vars.second;
 }
 

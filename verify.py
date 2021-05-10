@@ -35,7 +35,7 @@ if __name__ == "__main__":
              open(sat_filename, "r") as sat:
 
             clauses = list(filter(lambda s: s[0] not in ('p', 'c', '\n'), cnf.readlines()))
-            clauses = list(map(lambda s: list(map(int, s.strip().split(" "))), clauses))
+            clauses = list(map(lambda s: list(map(int, list(filter(lambda n: n, s.strip().split(" "))))), clauses))
 
             assignments = sat.readlines()
             if "UNSAT" in assignments[0]:

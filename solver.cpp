@@ -8,7 +8,7 @@
 #include <unordered_map>
 #include <cassert>
 
-#define MIN_LEN_OF_LEARNED_CLAUSE 8
+#define MIN_LEN_OF_LEARNED_CLAUSE 10
 #define CLAUSES_CAPACITY_MULTIPLIER 100
 
 Solver::Solver(std::vector<clause_t> &clauses, int maxVarIndex) {

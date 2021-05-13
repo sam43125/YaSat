@@ -8,6 +8,8 @@
 #include <utility>
 #include <optional>
 
+#include "Jeroslaw_Wang.hpp"
+
 typedef std::vector<int> clause_t;
 
 class Solver {
@@ -43,14 +45,29 @@ private:
     std::unordered_map<const clause_t *, std::pair<int, int> > watched_variable;
     /// Store x (or -x) if x is to be implied as 1 (or 0)
     std::queue<int> imply_queue;
-    /// Branching Heuristics - Jeroslaw-Wang Score table
-    std::unordered_map<int, double> score_table;
+    /// Branching Heuristics - Jeroslow-Wang method
+    Jeroslaw_Wang selector;
     /// Denote which level to jump to rerun BCP if conflicting
     std::optional<int> jump_to;
 
 public:
 
     Solver(std::vector<clause_t> &clauses, int maxVarIndex);
+
+    /**
+     * @brief Implementation of modified Davis-Putnam-Logemann-Loveland algorithm
+     *        with non-chronological backtracking
+     * @retval SAT if SAT
+     * @retval UNSAT if UNSAT 
+     */
+    bool DPLL(int level=0);
+
+    /**
+     * @brief Convert the final assignments to DIMACS format
+     */
+    std::vector<int> getAssignments() const;
+
+private:
 
     void assign(int var, const clause_t *clause, int level=0);
 
@@ -73,31 +90,11 @@ public:
     int BCP(int x, int level);
 
     /**
-     * @brief Branching Heuristics - Jeroslaw-Wang Score
-     * @return The variable @c x which will be assigned to 1 
-     *         (if it's bigger than 0) or 0 instead  
-     */
-    int getNextDicisionVariable() const;
-
-    /**
      * @retval SAT if all the clauses are solved
      * @retval UNSAT if one of the clauses is UNSAT
      * @retval UNSOLVED else
      */
     int isSolved() const;
-
-    /**
-     * @brief Implementation of modified Davis-Putnam-Logemann-Loveland algorithm
-     *        with non-chronological backtracking
-     * @retval SAT if SAT
-     * @retval UNSAT if UNSAT 
-     */
-    bool DPLL(int level=0);
-
-    /**
-     * @brief Convert the final assignments to DIMACS format
-     */
-    std::vector<int> getAssignments() const;
 
     /**
      * @brief Resolve clauses @c F and @c G on @c x

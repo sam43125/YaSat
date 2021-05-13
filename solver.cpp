@@ -24,24 +24,12 @@ Solver::Solver(std::vector<clause_t> &clauses, int maxVarIndex) {
     this->assignments.resize(maxVarIndex + 1, UNASSIGNED);
     this->pos_watched.resize(maxVarIndex + 1);
     this->neg_watched.resize(maxVarIndex + 1);
-    this->score_table.reserve(2 * maxVarIndex);
+    this->selector.initialize(clauses, maxVarIndex, &this->assignments);
 
     // Construct Watching Lists
     for (auto &clause : this->clauses) {
         this->constructWatchingLists(clause);
     }
-
-    // Construct Jeroslaw-Wang Score table
-    for (int i = 1; i <= maxVarIndex; ++i) {
-        this->score_table[i] = 0.0;
-        this->score_table[-i] = 0.0;
-    }
-    for (const auto clause : this->clauses) {
-        double score = std::pow(2, static_cast<int>(-clause.size()));
-        for (auto var : clause)
-            this->score_table[var] += score;
-    }
-
 }
 
 void Solver::assign(int var, const clause_t *clause, int level/*=0*/) {
@@ -161,9 +149,7 @@ int Solver::BCP(int x, int level) {
                 this->clauses.push_back(learned_clause);
 
                 // Update score table
-                double score = std::pow(2, static_cast<int>(-learned_clause.size()));
-                for (auto var : learned_clause)
-                    this->score_table[var] += score;
+                this->selector.update(learned_clause);
 
                 // Update some variables associated with 2-literals watching
                 this->imply_queue = {};
@@ -191,26 +177,6 @@ int Solver::BCP(int x, int level) {
         }
     }
     return SUCCESS;
-}
-
-int Solver::getNextDicisionVariable() const {
-    // Jeroslaw-Wang Score
-    int next_var = 0;
-    double max_score = 0.0;
-    for (size_t i = 1; i < this->assignments.size(); ++i) {
-        if (this->assignments[i] == UNASSIGNED) {
-            double score;
-            if ((score = this->score_table.at(i)) > max_score) {
-                max_score = score;
-                next_var = i;
-            }
-            if ((score = this->score_table.at(-i)) > max_score) {
-                max_score = score;
-                next_var = -i;
-            }
-        }
-    }
-    return next_var;
 }
 
 int Solver::isSolved() const {
@@ -252,7 +218,7 @@ bool Solver::DPLL(int level/*=0*/) {
                 return UNSAT;
         }
 
-        int next_var = this->getNextDicisionVariable();
+        int next_var = this->selector.getNextDicisionVariable();
         if (next_var == 0)
             return SAT;
 

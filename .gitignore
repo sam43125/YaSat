@@ -1,3 +1,6 @@
 *.o
+*.pdf
+*.txt
+*.zip
 yasat
 .vscode/

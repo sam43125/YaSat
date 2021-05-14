@@ -15,6 +15,7 @@ Solver::Solver(std::vector<clause_t> &clauses, int maxVarIndex) {
 
     this->clauses = clauses;
     this->maxVarIndex = maxVarIndex;
+    this->nConflicts = this->nDecisions = this->nRestarts = 0U;
 
     // To prevent reallocation of vector which makes pointer to clause invaild
     this->clauses_capacity = CLAUSES_CAPACITY_MULTIPLIER * this->clauses.size();
@@ -24,7 +25,7 @@ Solver::Solver(std::vector<clause_t> &clauses, int maxVarIndex) {
     this->assignments.resize(maxVarIndex + 1, UNASSIGNED);
     this->pos_watched.resize(maxVarIndex + 1);
     this->neg_watched.resize(maxVarIndex + 1);
-    this->selector.initialize(clauses, maxVarIndex, &this->assignments);
+    this->selector = new VSIDS(clauses, maxVarIndex, &this->assignments, &this->nConflicts);
 
     // Construct Watching Lists
     for (auto &clause : this->clauses) {
@@ -136,6 +137,7 @@ int Solver::BCP(int x, int level) {
                     this->clauses.size() >= this->clauses_capacity)
                     return ECONFLICT;
 
+                this->nConflicts++;
                 this->jump_to = INT32_MIN;
                 for (auto var : learned_clause) {
                     int l = this->assigned_levels_reverse[std::abs(var)];
@@ -149,11 +151,11 @@ int Solver::BCP(int x, int level) {
                 this->clauses.push_back(learned_clause);
 
                 // Update score table
-                this->selector.update(learned_clause);
+                this->selector->update(learned_clause);
 
                 // Update some variables associated with 2-literals watching
                 this->imply_queue = {};
-                constructWatchingLists(this->clauses[this->clauses.size() - 1]);
+                constructWatchingLists(this->clauses.back());
                 if (learned_clause.size() > 1) {
                     int j = 0;
                     for (size_t i = 0; i < learned_clause.size() && j < 2; ++i) {
@@ -218,9 +220,10 @@ bool Solver::DPLL(int level/*=0*/) {
                 return UNSAT;
         }
 
-        int next_var = this->selector.getNextDicisionVariable();
+        int next_var = this->selector->getNextDicisionVariable();
         if (next_var == 0)
             return SAT;
+        this->nDecisions++;        
 
         this->assign(next_var, nullptr, level + 1);
         if (DPLL(level + 1) == SAT)

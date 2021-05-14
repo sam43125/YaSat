@@ -14,11 +14,6 @@ public:
 
     Jeroslaw_Wang(const std::vector<clause_t> &clauses, int maxVarIndex, 
                   const std::vector<int> *assignments) {
-        this->initialize(clauses, maxVarIndex, assignments);
-    }
-
-    void initialize(const std::vector<clause_t> &clauses, int maxVarIndex, 
-                    const std::vector<int> *assignments) {
 
         this->assignments = assignments;
         this->score_table.reserve(2 * maxVarIndex);

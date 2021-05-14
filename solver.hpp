@@ -8,7 +8,7 @@
 #include <utility>
 #include <optional>
 
-#include "Jeroslaw_Wang.hpp"
+#include "VSIDS.hpp"
 
 typedef std::vector<int> clause_t;
 
@@ -46,13 +46,21 @@ private:
     /// Store x (or -x) if x is to be implied as 1 (or 0)
     std::queue<int> imply_queue;
     /// Branching Heuristics - Jeroslow-Wang method
-    Jeroslaw_Wang selector;
+    branching_heuristic *selector;
     /// Denote which level to jump to rerun BCP if conflicting
     std::optional<int> jump_to;
+    /// Statistic
+    unsigned nDecisions;
+    unsigned nConflicts;
+    unsigned nRestarts;
 
 public:
 
     Solver(std::vector<clause_t> &clauses, int maxVarIndex);
+
+    ~Solver() {
+        delete this->selector;
+    }
 
     /**
      * @brief Implementation of modified Davis-Putnam-Logemann-Loveland algorithm

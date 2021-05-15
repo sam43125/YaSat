@@ -9,6 +9,7 @@
 #include <optional>
 
 #include "VSIDS.hpp"
+#include "Luby.hpp"
 
 typedef std::vector<int> clause_t;
 
@@ -53,6 +54,9 @@ private:
     unsigned nDecisions;
     unsigned nConflicts;
     unsigned nRestarts;
+    /// Random restart
+    Luby luby;
+    unsigned nextRestart;
 
 public:
 
@@ -74,6 +78,8 @@ public:
      * @brief Convert the final assignments to DIMACS format
      */
     std::vector<int> getAssignments() const;
+
+    void printStatistics() const;
 
 private:
 

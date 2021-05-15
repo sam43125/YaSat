@@ -39,6 +39,10 @@ int main(int argc, char **argv) {
         output_file << "s UNSATISFIABLE\n";
     }
 
+#ifdef DEBUG
+    solver.printStatistics();
+#endif
+
     output_file.close();
     return 0;
 }

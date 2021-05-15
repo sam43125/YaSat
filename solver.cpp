@@ -16,6 +16,7 @@ Solver::Solver(std::vector<clause_t> &clauses, int maxVarIndex) {
     this->clauses = clauses;
     this->maxVarIndex = maxVarIndex;
     this->nConflicts = this->nDecisions = this->nRestarts = 0U;
+    this->nextRestart = this->luby.next();
 
     // To prevent reallocation of vector which makes pointer to clause invaild
     this->clauses_capacity = CLAUSES_CAPACITY_MULTIPLIER * this->clauses.size();
@@ -137,7 +138,17 @@ int Solver::BCP(int x, int level) {
                     this->clauses.size() >= this->clauses_capacity)
                     return ECONFLICT;
 
-                this->nConflicts++;
+                if (++this->nConflicts == this->nextRestart) {
+                    this->nRestarts++;
+                    this->nextRestart += this->luby.next();
+                    this->imply_queue = {};
+#ifdef DEBUG
+                    std::clog << "Restart #" << this->nRestarts << "\n";
+#endif
+                    this->jump_to = 0;
+                    return ECONFLICT;
+                }
+
                 this->jump_to = INT32_MIN;
                 for (auto var : learned_clause) {
                     int l = this->assigned_levels_reverse[std::abs(var)];
@@ -342,4 +353,11 @@ void Solver::constructWatchingLists(const clause_t &clause) {
     else
         this->neg_watched[-var2].push_back(&clause);
     this->watched_variable[&clause] = {var1, var2};
+}
+
+void Solver::printStatistics() const {
+    std::clog << "\nrestarts              : " << this->nRestarts
+              << "\nconflicts             : " << this->nConflicts
+              << "\ndecisions             : " << this->nDecisions
+              << "\n";
 }
